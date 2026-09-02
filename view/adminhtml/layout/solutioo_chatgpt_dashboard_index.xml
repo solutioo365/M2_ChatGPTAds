@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <title>ChatGPT Produktsuche</title>
+        <css src="Solutioo_ChatGptProductSearch::css/dashboard.css"/>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Solutioo\ChatGptProductSearch\Block\Adminhtml\Dashboard"
+                   name="solutioo.chatgpt.dashboard"
+                   template="Solutioo_ChatGptProductSearch::dashboard.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

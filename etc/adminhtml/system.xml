@@ -1,0 +1,514 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="solutioo" translate="label" sortOrder="400">
+            <label>Solutioo</label>
+        </tab>
+        <section id="solutioo_chatgpt" translate="label" type="text" sortOrder="30"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>ChatGPT Produktsuche</label>
+            <tab>solutioo</tab>
+            <resource>Solutioo_ChatGptProductSearch::config</resource>
+
+            <group id="general" translate="label" sortOrder="10"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Allgemein</label>
+                <comment><![CDATA[
+                    <p>Produkt-Feed für die ChatGPT-Produktsuche. Händlerzugang:
+                    <a href="https://chatgpt.com/de-DE/merchants/" target="_blank" rel="noopener">chatgpt.com/merchants</a>.
+                    Übersicht: <a href="solutioo_chatgpt/dashboard/index">Solutioo → ChatGPT Produktsuche → Übersicht</a>.</p>
+                ]]></comment>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Aktiviert</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Schaltet Feed-Erzeugung, Cron, HTTPS-Endpunkt und API-Sync für diesen Scope ein.</comment>
+                </field>
+            </group>
+
+            <group id="seller" translate="label" sortOrder="20"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Händler &amp; Richtlinien</label>
+                <comment>Diese Daten erscheinen als Seller-Objekt in jedem Feed-Produkt. OpenAI erwartet stabile, öffentliche HTTPS-URLs.</comment>
+                <field id="name" translate="label comment" type="text" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Händlername</label>
+                    <comment>Leer = Shopname. Max. 70 Zeichen. Wird als seller.name verwendet.</comment>
+                    <validate>validate-length maximum-length-70</validate>
+                </field>
+                <field id="url" translate="label" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Händler-URL</label>
+                    <comment>Leer = Store-Base-URL. HTTPS bevorzugt.</comment>
+                    <validate>validate-url</validate>
+                </field>
+                <field id="target_country" translate="label" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Ziel-Land (ISO 3166)</label>
+                    <comment>Zwei Buchstaben, z. B. DE, AT, US. ChatGPT Shopping ist derzeit primär US, Feed-Vorbereitung für weitere Märkte ist sinnvoll.</comment>
+                    <validate>required-entry validate-length maximum-length-2 minimum-length-2</validate>
+                </field>
+                <field id="store_country" translate="label" type="text" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Store-Land</label>
+                    <comment>Leer = Ziel-Land.</comment>
+                </field>
+                <field id="privacy_url" translate="label" type="text" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Datenschutz-URL</label>
+                    <validate>validate-url</validate>
+                </field>
+                <field id="tos_url" translate="label" type="text" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>AGB-URL</label>
+                    <validate>validate-url</validate>
+                </field>
+                <field id="return_url" translate="label" type="text" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Rückgabe-URL</label>
+                    <validate>validate-url</validate>
+                </field>
+                <field id="shipping_url" translate="label" type="text" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Versand-URL</label>
+                    <validate>validate-url</validate>
+                </field>
+                <field id="faq_url" translate="label" type="text" sortOrder="90"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>FAQ-URL</label>
+                    <validate>validate-url</validate>
+                </field>
+                <field id="accepts_returns" translate="label" type="select" sortOrder="100"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Rückgaben akzeptiert</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="return_deadline_days" translate="label" type="text" sortOrder="110"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Rückgabefrist (Tage)</label>
+                    <validate>validate-digits</validate>
+                </field>
+                <field id="accepts_exchanges" translate="label" type="select" sortOrder="120"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Umtausch akzeptiert</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+
+            <group id="feed" translate="label" sortOrder="30"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Feed-Inhalt</label>
+                <field id="format" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Format</label>
+                    <source_model>Solutioo\ChatGptProductSearch\Model\Config\Source\FeedFormat</source_model>
+                    <comment>JSONL ist das von OpenAI empfohlene Format. SFTP/Ads: eine kaufbare SKU pro Zeile, description als Klartext.</comment>
+                </field>
+                <field id="gzip" translate="label" type="select" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Gzip-Kompression</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Empfohlen für SFTP (.jsonl.gz / .csv.gz).</comment>
+                </field>
+                <field id="include_out_of_stock" translate="label" type="select" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Ausverkaufte Artikel einbeziehen</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="include_disabled" translate="label" type="select" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Deaktivierte Produkte einbeziehen</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="only_eligible_search" translate="label comment" type="select" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Nur explizit freigegebene Produkte</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Wenn ja, müssen Produkte das Attribut „ChatGPT Suche“ aktiv haben.</comment>
+                </field>
+                <field id="variant_mode" translate="label comment" type="select" sortOrder="52"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Varianten-Export</label>
+                    <source_model>Solutioo\ChatGptProductSearch\Model\Config\Source\VariantMode</source_model>
+                    <comment>Hauptprodukte: Configurable als ein Listing. Alle Varianten: jede kaufbare SKU (empfohlen für ChatGPT).</comment>
+                </field>
+                <field id="exclude_incomplete" translate="label comment" type="select" sortOrder="54"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Unvollständige Produkte ausschließen</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Überspringt Einträge ohne Titel, Beschreibung, Bild, Preis oder gültige URL.</comment>
+                </field>
+                <field id="media_cdn_url" translate="label comment" type="text" sortOrder="56"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Medien-CDN / S3 Basis-URL</label>
+                    <comment>Optional. Überschreibt die Magento-Media-URL in Bildern (z. B. https://cdn.example.com/media). Leer = Magento-Media-URL (inkl. vorhandenem S3/CDN).</comment>
+                    <validate>validate-url</validate>
+                </field>
+                <field id="visibility" translate="label" type="multiselect" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Sichtbarkeit</label>
+                    <source_model>Solutioo\ChatGptProductSearch\Model\Config\Source\Visibility</source_model>
+                    <can_be_empty>1</can_be_empty>
+                </field>
+                <field id="include_categories" translate="label comment" type="text" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Nur Kategorien (IDs)</label>
+                    <comment>Kommagetrennt. Leer = alle. Beispiel: 12,34,56</comment>
+                </field>
+                <field id="exclude_categories" translate="label" type="text" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Kategorien ausschließen (IDs)</label>
+                </field>
+                <field id="sample_limit" translate="label comment" type="text" sortOrder="90"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Sample-Limit</label>
+                    <comment>0 = vollständiger Katalog. Für die OpenAI-Erstvalidierung z. B. 50 setzen.</comment>
+                    <validate>validate-digits</validate>
+                </field>
+                <field id="default_search_eligible" translate="label" type="select" sortOrder="100"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Standard: Suche erlaubt</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="default_checkout_eligible" translate="label comment" type="select" sortOrder="110"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Standard: Checkout in ChatGPT</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>OpenAI priorisiert aktuell die Produktsuche; Käufe enden auf der Händlerseite. Standard: Nein.</comment>
+                </field>
+                <field id="include_promotions" translate="label" type="select" sortOrder="120"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Warenkorbpreisregeln als Promotions</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="utm_source" translate="label" type="text" sortOrder="130"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>UTM Source</label>
+                </field>
+                <field id="utm_medium" translate="label" type="text" sortOrder="140"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>UTM Medium</label>
+                </field>
+                <field id="utm_campaign" translate="label" type="text" sortOrder="150"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>UTM Campaign</label>
+                </field>
+            </group>
+
+            <group id="mapping" translate="label" sortOrder="40"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Attribut-Mapping</label>
+                <comment>Magento-Attributcodes auf OpenAI-Felder mappen. Existiert das Attribut nicht, wird der Fallback genutzt.</comment>
+                <field id="brand_attribute" translate="label" type="text" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Marke (brand)</label>
+                </field>
+                <field id="gtin_attribute" translate="label" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>GTIN / EAN</label>
+                </field>
+                <field id="mpn_attribute" translate="label" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>MPN</label>
+                </field>
+                <field id="condition_attribute" translate="label" type="text" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Zustand-Attribut</label>
+                </field>
+                <field id="default_condition" translate="label" type="select" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Standard-Zustand</label>
+                    <source_model>Solutioo\ChatGptProductSearch\Model\Config\Source\Condition</source_model>
+                </field>
+                <field id="google_category_attribute" translate="label" type="text" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Google-Produktkategorie</label>
+                </field>
+                <field id="color_attribute" translate="label" type="text" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Farbe</label>
+                </field>
+                <field id="size_attribute" translate="label" type="text" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Größe</label>
+                </field>
+                <field id="material_attribute" translate="label" type="text" sortOrder="90"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Material</label>
+                </field>
+                <field id="gender_attribute" translate="label" type="text" sortOrder="100"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Geschlecht</label>
+                </field>
+                <field id="age_group_attribute" translate="label" type="text" sortOrder="110"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Altersgruppe</label>
+                </field>
+                <field id="include_reviews" translate="label" type="select" sortOrder="120"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Bewertungen exportieren</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+
+            <group id="delivery" translate="label" sortOrder="50"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>HTTPS-Feed (Vorschau / Download)</label>
+                <comment>OpenAI erwartet primär SFTP-Push. Der HTTPS-Endpunkt ist token-geschützt und eignet sich für Vorschau, QA und Partner, die eine URL akzeptieren.</comment>
+                <field id="https_enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>HTTPS-Endpunkt aktiv</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="feed_token" translate="label comment" type="obscure" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Feed-Token</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <comment>Wird als Query-Parameter ?token=… erwartet. Über den Button unten automatisch erzeugen.</comment>
+                </field>
+                <field id="generate_token" translate="label" type="label" sortOrder="30"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Token erzeugen</label>
+                    <frontend_model>Solutioo\ChatGptProductSearch\Block\Adminhtml\System\Config\GenerateToken</frontend_model>
+                </field>
+                <field id="feed_url" translate="label" type="label" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Öffentliche Feed-URL</label>
+                    <frontend_model>Solutioo\ChatGptProductSearch\Block\Adminhtml\System\Config\FeedUrl</frontend_model>
+                </field>
+                <field id="generate_on_request" translate="label comment" type="select" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Bei Abruf neu erzeugen</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Nein = zuletzt erzeugte Datei ausliefern (schneller). Ja = bei jedem Abruf neu bauen.</comment>
+                </field>
+            </group>
+
+            <group id="sftp" translate="label" sortOrder="60"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>SFTP-Upload (OpenAI)</label>
+                <comment>Nach der Händlerfreigabe stellt OpenAI private SFTP-Zugangsdaten bereit. Dateiname stabil halten und bei jedem Lauf überschreiben.</comment>
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>SFTP aktiv</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="host" translate="label" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Host</label>
+                </field>
+                <field id="port" translate="label" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Port</label>
+                    <validate>validate-digits</validate>
+                </field>
+                <field id="username" translate="label" type="text" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Benutzer</label>
+                </field>
+                <field id="password" translate="label" type="obscure" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Passwort</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                </field>
+                <field id="private_key" translate="label comment" type="textarea" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Privater Schlüssel (optional)</label>
+                    <comment>PEM-Inhalt, falls OpenAI Key-Auth statt Passwort liefert.</comment>
+                </field>
+                <field id="remote_path" translate="label" type="text" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Remote-Pfad</label>
+                </field>
+                <field id="filename" translate="label comment" type="text" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Dateiname</label>
+                    <comment>Stabil halten, z. B. products.jsonl.gz</comment>
+                </field>
+                <field id="test_sftp" translate="label" type="label" sortOrder="90"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Verbindung testen</label>
+                    <frontend_model>Solutioo\ChatGptProductSearch\Block\Adminhtml\System\Config\TestSftp</frontend_model>
+                </field>
+            </group>
+
+            <group id="api" translate="label" sortOrder="70"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>OpenAI Commerce API</label>
+                <comment><![CDATA[Ads: <code>PATCH /feeds/{id}/products</code> über
+                <code>https://api.ads.openai.com/v1</code> (Preis, Titel, Verfügbarkeit).
+                Commerce: <code>POST /product_feeds</code> und
+                <code>PATCH /product_feeds/{id}/products</code>.
+                <a href="https://developers.openai.com/ads/delta-feeds" target="_blank" rel="noopener">Delta Feeds</a>,
+                <a href="https://developers.openai.com/commerce/specs/api/overview" target="_blank" rel="noopener">Commerce API</a>.]]></comment>
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API-Sync aktiv</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="mode" translate="label comment" type="select" sortOrder="15"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API-Modus</label>
+                    <source_model>Solutioo\ChatGptProductSearch\Model\Config\Source\ApiMode</source_model>
+                    <comment>Ads: Feed im Ads Manager anlegen (ID fd_…), dann Deltas per API. Commerce: eigener Product-Feed über api.openai.com.</comment>
+                </field>
+                <field id="base_url" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API Base-URL</label>
+                    <comment>Ads: https://api.ads.openai.com/v1 — Commerce: https://api.openai.com/v1</comment>
+                </field>
+                <field id="api_key" translate="label" type="obscure" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API-Key</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                </field>
+                <field id="version" translate="label" type="text" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API-Version</label>
+                    <comment>Header API-Version, aktuell 2025-09-12</comment>
+                </field>
+                <field id="feed_id" translate="label comment" type="text" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Feed-ID</label>
+                    <comment>Nach POST /product_feeds hier eintragen oder über die Übersicht anlegen.</comment>
+                </field>
+                <field id="account_id" translate="label" type="text" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Account-ID</label>
+                </field>
+                <field id="merchant_id" translate="label" type="text" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Merchant-ID</label>
+                </field>
+                <field id="batch_size" translate="label" type="text" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Batch-Größe (Upsert)</label>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="test_api" translate="label" type="label" sortOrder="90"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>API testen</label>
+                    <frontend_model>Solutioo\ChatGptProductSearch\Block\Adminhtml\System\Config\TestApi</frontend_model>
+                </field>
+            </group>
+
+            <group id="schedule" translate="label" sortOrder="80"
+                   showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Zeitplan</label>
+                <comment>OpenAI erwartet mindestens einen täglichen Snapshot. Magento-Cron muss laufen.</comment>
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Cron aktiv</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="cron_expr" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Cron-Ausdruck</label>
+                    <comment>Standard */15 * * * * (alle 15 Minuten). Täglich: 0 3 * * *</comment>
+                </field>
+                <field id="auto_sftp" translate="label" type="select" sortOrder="30"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Nach Erzeugung per SFTP hochladen</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="auto_api" translate="label" type="select" sortOrder="40"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Nach Erzeugung per API syncen</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+
+            <group id="tracking" translate="label" sortOrder="90"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Measurement Pixel</label>
+                <comment><![CDATA[
+                    Optional. OpenAI Ads Measurement Pixel
+                    (<a href="https://developers.openai.com/ads/measurement-pixel" target="_blank" rel="noopener">Dokumentation</a>).
+                    Pixel-ID im Ads Manager unter Conversions anlegen.
+                ]]></comment>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Aktiviert</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Lädt das Pixel im Storefront, sobald eine Pixel-ID gesetzt ist.</comment>
+                </field>
+                <field id="pixel_id" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Pixel-ID</label>
+                    <comment>ID aus dem Ads Manager, Reiter Conversions.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="debug" translate="label comment" type="select" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Debug</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Schreibt Pixel-Aufrufe ins Browser-Konsolenprotokoll. Nur zum Testen.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="respect_cookiebot" translate="label comment" type="select" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Cookiebot-Einwilligung beachten</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Bei Ja wird das Tag als type="text/plain" mit data-cookieconsent ausgegeben und erst nach Einwilligung aktiv.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="cookiebot_category" translate="label comment" type="text" sortOrder="50"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Cookiebot-Kategorie</label>
+                    <comment>Empfehlung: marketing</comment>
+                    <depends>
+                        <field id="respect_cookiebot">1</field>
+                    </depends>
+                </field>
+                <field id="track_page_view" translate="label" type="select" sortOrder="60"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Event page_viewed</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="track_product_view" translate="label" type="select" sortOrder="70"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Event contents_viewed (Produktdetail)</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="track_add_to_cart" translate="label" type="select" sortOrder="80"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Event items_added (Warenkorb)</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="track_checkout" translate="label" type="select" sortOrder="90"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Event checkout_started</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="track_purchase" translate="label" type="select" sortOrder="100"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Event order_created</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

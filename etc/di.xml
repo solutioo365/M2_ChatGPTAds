@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Solutioo\ChatGptProductSearch\Api\FeedManagementInterface"
+                type="Solutioo\ChatGptProductSearch\Model\Api\FeedManagement"/>
+
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="solutioo_chatgpt_log_listing_data_source" xsi:type="string">Solutioo\ChatGptProductSearch\Model\ResourceModel\FeedLog\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="Solutioo\ChatGptProductSearch\Model\ResourceModel\FeedLog\Grid\Collection"
+                 type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">solutioo_chatgpt_feed_log</argument>
+            <argument name="resourceModel" xsi:type="string">Solutioo\ChatGptProductSearch\Model\ResourceModel\FeedLog</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="solutioo_chatgpt_generate" xsi:type="object">Solutioo\ChatGptProductSearch\Console\Command\GenerateCommand</item>
+                <item name="solutioo_chatgpt_validate" xsi:type="object">Solutioo\ChatGptProductSearch\Console\Command\ValidateCommand</item>
+                <item name="solutioo_chatgpt_upload" xsi:type="object">Solutioo\ChatGptProductSearch\Console\Command\UploadCommand</item>
+                <item name="solutioo_chatgpt_sync_api" xsi:type="object">Solutioo\ChatGptProductSearch\Console\Command\SyncApiCommand</item>
+                <item name="solutioo_chatgpt_status" xsi:type="object">Solutioo\ChatGptProductSearch\Console\Command\StatusCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

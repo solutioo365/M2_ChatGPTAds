@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Solutioo_ChatGptProductSearch::root"
+             title="ChatGPT Produktsuche"
+             module="Solutioo_ChatGptProductSearch"
+             sortOrder="30"
+             parent="Solutioo_Base::solutioo"
+             resource="Solutioo_ChatGptProductSearch::root"/>
+        <add id="Solutioo_ChatGptProductSearch::overview"
+             title="Übersicht"
+             module="Solutioo_ChatGptProductSearch"
+             sortOrder="10"
+             parent="Solutioo_ChatGptProductSearch::root"
+             action="solutioo_chatgpt/dashboard/index"
+             resource="Solutioo_ChatGptProductSearch::overview"/>
+        <add id="Solutioo_ChatGptProductSearch::log"
+             title="Protokolle"
+             module="Solutioo_ChatGptProductSearch"
+             sortOrder="20"
+             parent="Solutioo_ChatGptProductSearch::root"
+             action="solutioo_chatgpt/log/index"
+             resource="Solutioo_ChatGptProductSearch::log"/>
+        <add id="Solutioo_ChatGptProductSearch::config"
+             title="Einstellungen"
+             module="Solutioo_ChatGptProductSearch"
+             sortOrder="30"
+             parent="Solutioo_ChatGptProductSearch::root"
+             action="adminhtml/system_config/edit/section/solutioo_chatgpt"
+             resource="Solutioo_ChatGptProductSearch::config"/>
+    </menu>
+</config>

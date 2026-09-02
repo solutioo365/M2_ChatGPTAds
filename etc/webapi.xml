@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+
+    <route url="/V1/solutioo/chatgpt/feed/generate/:storeId" method="POST">
+        <service class="Solutioo\ChatGptProductSearch\Api\FeedManagementInterface" method="generate"/>
+        <resources>
+            <resource ref="Solutioo_ChatGptProductSearch::api"/>
+        </resources>
+    </route>
+
+    <route url="/V1/solutioo/chatgpt/feed/validate/:storeId" method="GET">
+        <service class="Solutioo\ChatGptProductSearch\Api\FeedManagementInterface" method="validate"/>
+        <resources>
+            <resource ref="Solutioo_ChatGptProductSearch::api"/>
+        </resources>
+    </route>
+
+    <route url="/V1/solutioo/chatgpt/feed/status/:storeId" method="GET">
+        <service class="Solutioo\ChatGptProductSearch\Api\FeedManagementInterface" method="status"/>
+        <resources>
+            <resource ref="Solutioo_ChatGptProductSearch::api"/>
+        </resources>
+    </route>
+
+    <route url="/V1/solutioo/chatgpt/feed/sync-api/:storeId" method="POST">
+        <service class="Solutioo\ChatGptProductSearch\Api\FeedManagementInterface" method="syncApi"/>
+        <resources>
+            <resource ref="Solutioo_ChatGptProductSearch::api"/>
+        </resources>
+    </route>
+
+    <route url="/V1/solutioo/chatgpt/feed/sftp/:storeId" method="POST">
+        <service class="Solutioo\ChatGptProductSearch\Api\FeedManagementInterface" method="uploadSftp"/>
+        <resources>
+            <resource ref="Solutioo_ChatGptProductSearch::api"/>
+        </resources>
+    </route>
+</routes>

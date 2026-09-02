@@ -1,0 +1,51 @@
+{
+    "name": "solutioo/module-chatgpt-product-search",
+    "description": "Magento 2 Modul für die ChatGPT Produktsuche (Feed, SFTP, OpenAI-API, optionales Measurement Pixel).",
+    "type": "magento2-module",
+    "version": "1.0.5",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "authors": [
+        {
+            "name": "Solutioo",
+            "email": "info@solutioo.de",
+            "homepage": "https://www.solutioo.de"
+        }
+    ],
+    "keywords": [
+        "magento2",
+        "magento",
+        "chatgpt",
+        "openai",
+        "product-feed",
+        "solutioo",
+        "adobe-commerce"
+    ],
+    "require": {
+        "php": ">=8.1",
+        "solutioo/module-base": "^1.0",
+        "magento/framework": "*",
+        "magento/module-backend": "*",
+        "magento/module-catalog": "*",
+        "magento/module-catalog-inventory": "*",
+        "magento/module-config": "*",
+        "magento/module-store": "*",
+        "magento/module-configurable-product": "*",
+        "magento/module-review": "*",
+        "magento/module-sales-rule": "*",
+        "magento/module-sales": "*",
+        "magento/module-checkout": "*",
+        "magento/module-csp": "*",
+        "magento/module-webapi": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Solutioo\\ChatGptProductSearch\\": ""
+        }
+    }
+}

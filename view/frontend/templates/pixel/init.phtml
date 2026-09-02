@@ -1,0 +1,40 @@
+<?php
+/** @var \Magento\Framework\View\Element\Template $block */
+$viewModel = $block->getViewModel();
+if (!$viewModel instanceof \Solutioo\ChatGptProductSearch\ViewModel\PixelViewModel || !$viewModel->isEnabled()) {
+    return;
+}
+
+$jsConfig = $viewModel->getJsConfig();
+$useConsent = $viewModel->useConsentGating();
+$scriptType = $useConsent ? 'text/plain' : 'text/javascript';
+$consentAttr = $useConsent
+    ? ' data-cookieconsent="' . $block->escapeHtmlAttr($viewModel->getCookiebotCategory()) . '"'
+    : '';
+$pixelId = $viewModel->getPixelId();
+$debug = !empty($jsConfig['debug']) ? ', debug: true' : '';
+?>
+<script type="<?= $block->escapeHtmlAttr($scriptType) ?>"<?= /* @noEscape */ $consentAttr ?>>
+(function (w, d, s, u) {
+    if (w.oaiq) return;
+    var q = function () { q.q.push(arguments); };
+    q.q = [];
+    w.oaiq = q;
+    var js = d.createElement(s);
+    js.async = true;
+    js.src = u;
+    var f = d.getElementsByTagName(s)[0];
+    f.parentNode.insertBefore(js, f);
+})(window, document, 'script', 'https://bzrcdn.openai.com/sdk/oaiq.min.js');
+<?php if ($useConsent): ?>
+oaiq('consent', false);
+<?php endif; ?>
+oaiq('init', { pixelId: '<?= $block->escapeJs($pixelId) ?>'<?= /* @noEscape */ $debug ?> });
+</script>
+<script type="text/x-magento-init">
+{
+    "*": {
+        "Solutioo_ChatGptProductSearch/js/pixel": <?= /* @noEscape */ $viewModel->jsonEncode($jsConfig) ?>
+    }
+}
+</script>

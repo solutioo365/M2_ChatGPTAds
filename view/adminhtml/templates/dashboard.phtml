@@ -1,0 +1,336 @@
+<?php
+/** @var \Solutioo\ChatGptProductSearch\Block\Adminhtml\Dashboard $block */
+/** @var \Magento\Framework\Escaper $escaper */
+$stores = $block->getStores();
+$logs = $block->getRecentLogs();
+$first = $stores[0] ?? null;
+?>
+<div class="scg-dash"
+     data-generate-url="<?= $escaper->escapeUrl($block->getGenerateUrl()) ?>"
+     data-validate-url="<?= $escaper->escapeUrl($block->getValidateUrl()) ?>"
+     data-preview-url="<?= $escaper->escapeUrl($block->getPreviewUrl()) ?>"
+     data-upload-url="<?= $escaper->escapeUrl($block->getUploadUrl()) ?>"
+     data-sync-url="<?= $escaper->escapeUrl($block->getSyncApiUrl()) ?>"
+     data-create-url="<?= $escaper->escapeUrl($block->getCreateFeedUrl()) ?>"
+     data-form-key="<?= $escaper->escapeHtmlAttr($block->getFormKey()) ?>">
+
+    <div class="scg-toolbar">
+        <div class="scg-toolbar__store">
+            <label for="scg-store"><?= $escaper->escapeHtml(__('Store View')) ?></label>
+            <select id="scg-store" class="admin__control-select">
+                <?php foreach ($stores as $store): ?>
+                    <option value="<?= (int) $store['store_id'] ?>"
+                            data-download="<?= $escaper->escapeUrl($block->getDownloadUrl((int) $store['store_id'])) ?>"
+                            data-feed-url="<?= $escaper->escapeUrl((string) $store['feed_url']) ?>">
+                        <?= $escaper->escapeHtml($store['store_name'] . ' (' . $store['store_code'] . ')') ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="scg-toolbar__actions">
+            <button type="button" class="scg-btn scg-btn-primary" data-action="generate">
+                <?= $escaper->escapeHtml(__('Feed erzeugen')) ?>
+            </button>
+            <button type="button" class="scg-btn" data-action="validate">
+                <?= $escaper->escapeHtml(__('Validieren')) ?>
+            </button>
+            <button type="button" class="scg-btn" data-action="preview">
+                <?= $escaper->escapeHtml(__('Vorschau')) ?>
+            </button>
+            <a class="scg-btn" id="scg-download"
+               href="<?= $escaper->escapeUrl($first ? $block->getDownloadUrl((int) $first['store_id']) : '#') ?>">
+                <?= $escaper->escapeHtml(__('Download')) ?>
+            </a>
+            <button type="button" class="scg-btn" data-action="upload">
+                <?= $escaper->escapeHtml(__('SFTP Upload')) ?>
+            </button>
+            <button type="button" class="scg-btn" data-action="sync">
+                <?= $escaper->escapeHtml(__('API Sync')) ?>
+            </button>
+            <button type="button" class="scg-btn" data-action="create">
+                <?= $escaper->escapeHtml(__('API-Feed anlegen')) ?>
+            </button>
+            <button type="button" class="scg-btn" id="scg-copy-url">
+                <?= $escaper->escapeHtml(__('Feed-URL kopieren')) ?>
+            </button>
+            <a class="scg-btn" href="<?= $escaper->escapeUrl($block->getConfigUrl()) ?>">
+                <?= $escaper->escapeHtml(__('Einstellungen')) ?>
+            </a>
+        </div>
+    </div>
+
+    <div id="scg-messages" class="messages"></div>
+
+    <div class="admin__page-section">
+        <div class="admin__page-section-title">
+            <span class="title"><?= $escaper->escapeHtml(__('Store-Status')) ?></span>
+        </div>
+        <div class="admin__page-section-content">
+            <div class="admin__data-grid-wrap">
+                <table class="data-grid">
+                    <thead>
+                    <tr>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Status')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Bereitschaft')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Format')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Varianten')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Land')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Datei')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Zuletzt')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Lieferung')) ?></th>
+                        <th class="data-grid-th"><?= $escaper->escapeHtml(__('Offen')) ?></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($stores === []): ?>
+                        <tr>
+                            <td class="col-empty" colspan="10"><?= $escaper->escapeHtml(__('Keine aktiven Store Views.')) ?></td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php foreach ($stores as $index => $store): ?>
+                        <?php
+                        $ready = (int) $store['readiness'];
+                        $missing = [];
+                        foreach ($store['checklist'] as $item) {
+                            if (empty($item['ok'])) {
+                                $missing[] = (string) $item['label'];
+                            }
+                        }
+                        $delivery = trim(
+                            (!empty($store['https_enabled']) ? 'HTTPS ' : '')
+                            . (!empty($store['sftp_enabled']) ? 'SFTP ' : '')
+                            . (!empty($store['api_enabled']) ? 'API' : '')
+                        );
+                        ?>
+                        <tr class="<?= $index % 2 ? '_odd' : '' ?>">
+                            <td>
+                                <?= $escaper->escapeHtml((string) $store['store_name']) ?>
+                                <div class="scg-muted"><?= $escaper->escapeHtml((string) $store['store_code']) ?></div>
+                            </td>
+                            <td>
+                                <?php if (!empty($store['enabled'])): ?>
+                                    <span class="grid-severity-notice"><span><?= $escaper->escapeHtml(__('Aktiv')) ?></span></span>
+                                <?php else: ?>
+                                    <span class="grid-severity-minor"><span><?= $escaper->escapeHtml(__('Inaktiv')) ?></span></span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= $escaper->escapeHtml((string) $ready) ?>%</td>
+                            <td><?= $escaper->escapeHtml((string) $store['format']) ?></td>
+                            <td><?= $escaper->escapeHtml((string) $store['variant_mode']) ?></td>
+                            <td><?= $escaper->escapeHtml((string) $store['target_country']) ?></td>
+                            <td><?= !empty($store['has_file']) ? $escaper->escapeHtml($block->formatBytes((int) $store['file_size'])) : $escaper->escapeHtml(__('–')) ?></td>
+                            <td><?= $escaper->escapeHtml((string) ($store['generated_at'] ?: ($store['last_log']['created_at'] ?? '–'))) ?></td>
+                            <td><?= $escaper->escapeHtml($delivery !== '' ? $delivery : '–') ?></td>
+                            <td>
+                                <?php if ($missing === []): ?>
+                                    <span class="grid-severity-notice"><span><?= $escaper->escapeHtml(__('vollständig')) ?></span></span>
+                                <?php else: ?>
+                                    <?= $escaper->escapeHtml(implode(', ', $missing)) ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php foreach ($stores as $store): ?>
+                <div class="admin__field">
+                    <label class="admin__field-label">
+                        <span><?= $escaper->escapeHtml(__('Feed-URL (%1)', $store['store_code'])) ?></span>
+                    </label>
+                    <div class="admin__field-control">
+                        <input type="text"
+                               class="admin__control-text scg-feed-url"
+                               readonly="readonly"
+                               value="<?= $escaper->escapeHtmlAttr((string) $store['feed_url']) ?>"
+                               onclick="this.select()"/>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            <p class="scg-links">
+                <a href="<?= $escaper->escapeUrl($block->getMerchantUrl()) ?>" target="_blank" rel="noopener">
+                    <?= $escaper->escapeHtml(__('Händler-Bewerbung')) ?>
+                </a>
+                <span>|</span>
+                <a href="<?= $escaper->escapeUrl($block->getDocsUrl()) ?>" target="_blank" rel="noopener">
+                    <?= $escaper->escapeHtml(__('OpenAI Dokumentation')) ?>
+                </a>
+                <span>|</span>
+                <span><?= $escaper->escapeHtml(__('Modul %1 · %2', $block->getModuleVersion(), $block->getMagentoVersion())) ?></span>
+            </p>
+        </div>
+    </div>
+
+    <div class="admin__page-section">
+        <div class="admin__page-section-title">
+            <span class="title"><?= $escaper->escapeHtml(__('Vorschau und Protokoll')) ?></span>
+        </div>
+        <div class="admin__page-section-content scg-cols">
+            <div>
+                <div class="admin__field">
+                    <label class="admin__field-label" for="scg-preview">
+                        <span><?= $escaper->escapeHtml(__('Live-Vorschau')) ?></span>
+                    </label>
+                    <div class="admin__field-control">
+                        <textarea id="scg-preview"
+                                  class="admin__control-textarea"
+                                  readonly="readonly"
+                                  rows="16"><?= $escaper->escapeHtml(__('„Vorschau“ lädt die ersten Produkte im OpenAI-JSONL-Schema.')) ?></textarea>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="admin__table-wrapper">
+                    <p>
+                        <a href="<?= $escaper->escapeUrl($block->getLogUrl()) ?>">
+                            <?= $escaper->escapeHtml(__('Alle Protokolle')) ?>
+                        </a>
+                    </p>
+                    <table class="data-grid">
+                        <thead>
+                        <tr>
+                            <th class="data-grid-th"><?= $escaper->escapeHtml(__('Zeit')) ?></th>
+                            <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store')) ?></th>
+                            <th class="data-grid-th"><?= $escaper->escapeHtml(__('Aktion')) ?></th>
+                            <th class="data-grid-th"><?= $escaper->escapeHtml(__('Status')) ?></th>
+                            <th class="data-grid-th"><?= $escaper->escapeHtml(__('Meldung')) ?></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php if ($logs === []): ?>
+                            <tr>
+                                <td class="col-empty" colspan="5"><?= $escaper->escapeHtml(__('Noch keine Läufe.')) ?></td>
+                            </tr>
+                        <?php endif; ?>
+                        <?php foreach ($logs as $index => $log): ?>
+                            <tr class="<?= $index % 2 ? '_odd' : '' ?>">
+                                <td><?= $escaper->escapeHtml((string) $log['created_at']) ?></td>
+                                <td><?= (int) $log['store_id'] ?></td>
+                                <td><?= $escaper->escapeHtml((string) $log['action']) ?></td>
+                                <td>
+                                    <?php if (($log['status'] ?? '') === 'success'): ?>
+                                        <span class="grid-severity-notice"><span><?= $escaper->escapeHtml((string) $log['status']) ?></span></span>
+                                    <?php else: ?>
+                                        <span class="grid-severity-critical"><span><?= $escaper->escapeHtml((string) $log['status']) ?></span></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= $escaper->escapeHtml((string) $log['message']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+require(['jquery'], function ($) {
+    'use strict';
+    $(function () {
+        var $root = $('.scg-dash');
+        if (!$root.length) {
+            return;
+        }
+
+        var $store = $('#scg-store');
+        var $download = $('#scg-download');
+        var $messages = $('#scg-messages');
+        var $preview = $('#scg-preview');
+
+        function storeId() {
+            return $store.length ? $store.val() : '1';
+        }
+
+        function showMessage(message, isError) {
+            var type = isError ? 'error error' : 'success success';
+            $messages.html(
+                '<div class="message message-' + type + '"><div></div></div>'
+            );
+            $messages.find('div div').text(message);
+        }
+
+        function writePreview(data) {
+            if ($preview.length) {
+                $preview.val(JSON.stringify(data, null, 2));
+            }
+        }
+
+        $store.on('change', function () {
+            var url = $store.find('option:selected').attr('data-download');
+            if (url) {
+                $download.attr('href', url);
+            }
+        });
+
+        $('#scg-copy-url').on('click', function () {
+            var url = $store.find('option:selected').attr('data-feed-url') || '';
+            if (!url) {
+                showMessage('Keine Feed-URL vorhanden.', true);
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function () {
+                    showMessage('Feed-URL kopiert.');
+                }).catch(function () {
+                    window.prompt('Feed-URL', url);
+                });
+            } else {
+                window.prompt('Feed-URL', url);
+            }
+        });
+
+        $root.on('click', '[data-action]', function (event) {
+            event.preventDefault();
+            var action = $(this).attr('data-action');
+            var url = $root.attr('data-' + action + '-url');
+            if (action === 'sync') {
+                url = $root.attr('data-sync-url');
+            }
+            if (action === 'create') {
+                url = $root.attr('data-create-url');
+            }
+            if (!url) {
+                showMessage('Keine URL für diese Aktion.', true);
+                return;
+            }
+            showMessage('Bitte warten …');
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    form_key: window.FORM_KEY || $root.attr('data-form-key'),
+                    store_id: storeId()
+                }
+            }).done(function (data) {
+                if (!data || data.success === false) {
+                    showMessage((data && data.message) || 'Fehler', true);
+                    return;
+                }
+                showMessage(data.message || 'OK');
+                if (action === 'preview' || action === 'validate') {
+                    writePreview(data);
+                }
+                if (action === 'generate' && data.errors) {
+                    writePreview({
+                        product_count: data.product_count,
+                        variant_count: data.variant_count,
+                        errors: data.errors.slice(0, 20),
+                        warnings: (data.warnings || []).slice(0, 20)
+                    });
+                }
+            }).fail(function (xhr) {
+                var message = 'Fehler';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                } else if (xhr.status) {
+                    message = 'Fehler ' + xhr.status;
+                }
+                showMessage(message, true);
+            });
+        });
+    });
+});
+</script>

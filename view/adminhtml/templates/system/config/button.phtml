@@ -1,0 +1,35 @@
+<?php
+/** @var \Magento\Backend\Block\Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
+$url = (string) $block->getData('button_url');
+$label = (string) $block->getData('button_label');
+$class = (string) $block->getData('button_class');
+?>
+<button type="button"
+        class="<?= $escaper->escapeHtmlAttr($class) ?> solutioo-chatgpt-ajax-btn"
+        data-url="<?= $escaper->escapeUrl($url) ?>">
+    <span><?= $escaper->escapeHtml($label) ?></span>
+</button>
+<p class="solutioo-chatgpt-ajax-msg" style="margin-top:8px"></p>
+<script>
+require(['jquery'], function ($) {
+    'use strict';
+    $(function () {
+        $('.solutioo-chatgpt-ajax-btn').off('click.solutioo').on('click.solutioo', function () {
+            var $btn = $(this);
+            var $msg = $btn.next('.solutioo-chatgpt-ajax-msg');
+            $msg.text('…');
+            $.ajax({
+                url: $btn.data('url'),
+                type: 'POST',
+                dataType: 'json',
+                data: { form_key: window.FORM_KEY }
+            }).done(function (res) {
+                $msg.text(res.message || (res.success ? 'OK' : 'Fehler'));
+            }).fail(function (xhr) {
+                $msg.text(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Fehler');
+            });
+        });
+    });
+});
+</script>
