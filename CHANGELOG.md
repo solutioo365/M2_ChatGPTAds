@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6 - 2026-09-02
+
+- README auf Deutsch und Englisch
+- Admin-Screenshots mit Erklärungen (Übersicht, Einstellungen)
+- Repository: [solutioo365/M2_ChatGPTAds](https://github.com/solutioo365/M2_ChatGPTAds)
+
 ## 1.0.5 - 2026-09-02
 
 - Admin-Übersicht mit Store-Status, Feed-Aktionen und Protokoll
