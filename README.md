@@ -137,15 +137,23 @@ Ohne Pixel-ID wird nichts geladen.
 ### Composer
 
 ```bash
+composer config repositories.solutioo composer https://www.solutioo.de/packages/
 composer require solutioo/module-chatgpt-product-search
 bin/magento module:enable Solutioo_Base Solutioo_ChatGptProductSearch
 bin/magento setup:upgrade
 bin/magento cache:flush
 ```
 
+Alternativ direkt über GitHub (VCS):
+
+```bash
+composer config repositories.solutioo-chatgpt vcs https://github.com/solutioo365/M2_ChatGPTAds.git
+composer require solutioo/module-chatgpt-product-search
+```
+
 ### app/code
 
-1. [Solutioo Base](https://github.com/solutioo365/M2_SolutiooBase) nach `app/code/Solutioo/Base`
+1. [Solutioo Base](https://github.com/solutioo365/magento-base) nach `app/code/Solutioo/Base`
 2. dieses Modul nach `app/code/Solutioo/ChatGptProductSearch`
 3. dieselben Magento-Befehle wie oben
 
@@ -342,15 +350,23 @@ Nothing is loaded until a pixel ID is set.
 ### Composer
 
 ```bash
+composer config repositories.solutioo composer https://www.solutioo.de/packages/
 composer require solutioo/module-chatgpt-product-search
 bin/magento module:enable Solutioo_Base Solutioo_ChatGptProductSearch
 bin/magento setup:upgrade
 bin/magento cache:flush
 ```
 
+Alternatively via GitHub (VCS):
+
+```bash
+composer config repositories.solutioo-chatgpt vcs https://github.com/solutioo365/M2_ChatGPTAds.git
+composer require solutioo/module-chatgpt-product-search
+```
+
 ### app/code
 
-1. [Solutioo Base](https://github.com/solutioo365/M2_SolutiooBase) into `app/code/Solutioo/Base`
+1. [Solutioo Base](https://github.com/solutioo365/magento-base) into `app/code/Solutioo/Base`
 2. this module into `app/code/Solutioo/ChatGptProductSearch`
 3. same Magento commands as above
 

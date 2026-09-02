@@ -5,6 +5,7 @@
 - README auf Deutsch und Englisch
 - Admin-Screenshots mit Erklärungen (Übersicht, Einstellungen)
 - Repository: [solutioo365/M2_ChatGPTAds](https://github.com/solutioo365/M2_ChatGPTAds)
+- Composer: `www.solutioo.de/packages/`
 
 ## 1.0.5 - 2026-09-02
 
