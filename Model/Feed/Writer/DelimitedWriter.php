@@ -64,6 +64,11 @@ class DelimitedWriter
                 'material',
                 'age_group',
                 'gender',
+                'custom_label_0',
+                'custom_label_1',
+                'custom_label_2',
+                'custom_label_3',
+                'custom_label_4',
                 'seller_name',
             ];
         }
@@ -87,6 +92,7 @@ class DelimitedWriter
             'age_group',
             'image_url',
             'additional_image_urls',
+            'ads_metadata',
             'price',
             'sale_price',
             'sale_price_start_date',

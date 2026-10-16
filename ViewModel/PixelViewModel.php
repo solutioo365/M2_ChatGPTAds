@@ -53,7 +53,7 @@ class PixelViewModel implements ArgumentInterface
         $storeId = $this->getStoreId();
         $currency = $this->getCurrencyCode();
 
-        return [
+        $config = [
             'pixelId' => $this->getPixelId(),
             'debug' => $this->config->isPixelDebug($storeId),
             'respectCookiebot' => $this->useConsentGating(),
@@ -67,6 +67,12 @@ class PixelViewModel implements ArgumentInterface
             ],
             'trackAddToCart' => $this->config->trackAddToCart($storeId),
         ];
+        $user = $this->matchingUser();
+        if ($user !== null) {
+            $config['user'] = $user;
+        }
+
+        return $config;
     }
 
     public function jsonEncode(mixed $value): string
@@ -225,6 +231,107 @@ class PixelViewModel implements ArgumentInterface
             'currency' => $currency,
             'contents' => $contents,
         ];
+    }
+
+    /**
+     * Gehashte Bestelldaten für das Measurement-Pixel. Rohwerte verlassen den Server nicht.
+     *
+     * @return array<string, string>|null
+     */
+    private function matchingUser(): ?array
+    {
+        if ($this->getFullActionName() !== 'checkout_onepage_success') {
+            return null;
+        }
+        try {
+            $order = $this->checkoutSession->getLastRealOrder();
+        } catch (\Throwable) {
+            return null;
+        }
+        if (!$order || !$order->getId()) {
+            return null;
+        }
+
+        $address = $order->getBillingAddress();
+        if (!is_object($address)) {
+            $address = null;
+        }
+        $country = strtoupper(trim((string) ($address?->getCountryId() ?? '')));
+        $user = [];
+
+        $email = mb_strtolower(trim((string) $order->getCustomerEmail()));
+        if ($email !== '' && str_contains($email, '@')) {
+            $user['email_sha256'] = hash('sha256', $email);
+        }
+
+        $phone = $this->normalizePhone((string) ($address?->getTelephone() ?? ''), $country);
+        if ($phone !== '') {
+            $user['phone_number_sha256'] = hash('sha256', $phone);
+        }
+
+        $customerId = (int) $order->getCustomerId();
+        if ($customerId > 0) {
+            $user['external_id_sha256'] = hash('sha256', (string) $customerId);
+        }
+
+        $first = $this->normalizePersonName((string) ($order->getCustomerFirstname() ?: $address?->getFirstname()));
+        $last = $this->normalizePersonName((string) ($order->getCustomerLastname() ?: $address?->getLastname()));
+        if ($first !== '') {
+            $user['first_name_sha256'] = hash('sha256', $first);
+        }
+        if ($last !== '') {
+            $user['last_name_sha256'] = hash('sha256', $last);
+        }
+
+        if (preg_match('/^[A-Z]{2}$/', $country)) {
+            $user['country'] = $country;
+        }
+        $city = mb_substr(trim((string) ($address?->getCity() ?? '')), 0, 128);
+        if ($city !== '') {
+            $user['city'] = $city;
+        }
+        $region = mb_substr(trim((string) ($address?->getRegion() ?? '')), 0, 128);
+        if ($region !== '') {
+            $user['region'] = $region;
+        }
+        $postcode = mb_substr(trim((string) ($address?->getPostcode() ?? '')), 0, 32);
+        if ($postcode !== '' && preg_match('/^[A-Za-z0-9 \-]+$/', $postcode)) {
+            $user['postal_code'] = $postcode;
+        }
+
+        return $user === [] ? null : $user;
+    }
+
+    private function normalizePhone(string $phone, string $country): string
+    {
+        $trimmed = trim($phone);
+        if ($trimmed === '') {
+            return '';
+        }
+        $hadPlus = str_starts_with($trimmed, '+');
+        $digits = preg_replace('/\D+/', '', $trimmed) ?? '';
+        if ($digits === '') {
+            return '';
+        }
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        } elseif (!$hadPlus && str_starts_with($digits, '0') && $country === 'DE') {
+            $digits = '49' . ltrim($digits, '0');
+        } else {
+            $digits = ltrim($digits, '0');
+        }
+
+        return preg_match('/^\d{8,15}$/', $digits) ? $digits : '';
+    }
+
+    private function normalizePersonName(string $name): string
+    {
+        $name = mb_strtolower(trim($name));
+        if ($name === '') {
+            return '';
+        }
+
+        return preg_replace('/[\s!"#$%&\'()*+,\-.\/:;<=>?@\[\]^_`{|}~]+/u', '', $name) ?? '';
     }
 
     private function getCurrentProduct(): ?Product

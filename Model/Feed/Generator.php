@@ -231,6 +231,7 @@ class Generator
             'age_group',
             'image_url',
             'additional_image_urls',
+            'ads_metadata',
             'price',
             'sale_price',
             'sale_price_start_date',
@@ -272,7 +273,35 @@ class Generator
                 if (!array_key_exists($key, $row) || $row[$key] === '' || $row[$key] === null) {
                     continue;
                 }
-                $record[$key] = $row[$key];
+                $value = $row[$key];
+                if ($key === 'additional_image_urls' && is_string($value)) {
+                    $urls = array_values(array_filter(array_map('trim', explode(',', $value))));
+                    if ($urls === []) {
+                        continue;
+                    }
+                    $record[$key] = $urls;
+                    continue;
+                }
+                if ($key === 'ads_metadata' && is_string($value)) {
+                    $decoded = json_decode($value, true);
+                    if (!is_array($decoded) || $decoded === []) {
+                        continue;
+                    }
+                    $record[$key] = $decoded;
+                    continue;
+                }
+                if ($key === 'target_countries' && is_string($value)) {
+                    $countries = array_values(array_filter(array_map(
+                        static fn (string $code): string => strtoupper(trim($code)),
+                        explode(',', $value)
+                    )));
+                    if ($countries === []) {
+                        continue;
+                    }
+                    $record[$key] = $countries;
+                    continue;
+                }
+                $record[$key] = $value;
             }
             $records[] = $record;
         }
