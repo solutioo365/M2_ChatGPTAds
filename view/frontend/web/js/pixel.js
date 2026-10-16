@@ -94,6 +94,12 @@ define([
             if (config.respectCookiebot) {
                 window.oaiq('consent', true);
             }
+            if (config.user && config.pixelId) {
+                window.oaiq('init', {
+                    pixelId: config.pixelId,
+                    user: config.user
+                });
+            }
             fireQueued(config);
         }
 

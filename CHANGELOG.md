@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.7 - 2026-10-16
+
+- JSONL liefert `additional_image_urls` als Array (bis zu 10 weitere Originalbilder, ausgeblendete Galeriebilder entfallen, Basisbild zuerst) für die visuellen Anzeigenformate
+- `ads_metadata` mit `custom_label_0` bis `custom_label_4` (Hauptkategorie, sale/regular, Marke, Verfügbarkeit, Unterkategorie) für Produktsets; dieselben Spalten im Google-Feed
+- Google-Feed setzt `sale_price_effective_date`, JSONL setzt `target_countries` als Länderliste
+- Measurement-Pixel übergibt auf der Bestellbestätigung gehashte Kundendaten an `oaiq('init')`, damit Conversions besser zugeordnet werden
+
 ## 1.0.6 - 2026-09-02
 
 - README auf Deutsch und Englisch

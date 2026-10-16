@@ -82,7 +82,7 @@ class ProductMapper
         $checkout = $this->isCheckoutEligible($parent, $storeId);
         $images = $this->imageUrls($variant, $parent);
         $mainImage = $images[0] ?? '';
-        $additional = array_slice($images, 1);
+        $additional = array_slice($images, 1, 10);
 
         $row = [
             'is_eligible_search' => $search ? 'true' : 'false',
@@ -102,7 +102,7 @@ class ProductMapper
             'item_weight_unit' => $variant->getWeight() ? $this->weightUnit() : '',
             'age_group' => strtolower($this->attributeText($variant, $this->config->getAgeGroupAttribute($storeId))),
             'image_url' => $mainImage,
-            'additional_image_urls' => implode(',', $additional),
+            'additional_image_urls' => $this->joinImageUrls($additional),
             'price' => $this->money->formatAmount($listPrice > 0 ? $listPrice : $price, $currency),
             'sale_price' => ($price > 0 && $listPrice > $price) ? $this->money->formatAmount($price, $currency) : '',
             'sale_price_start_date' => (string) $variant->getSpecialFromDate(),
@@ -128,7 +128,8 @@ class ProductMapper
             'id' => (string) $variant->getSku(),
             'link' => $this->productUrl($hasVariations ? $parent : $variant, $storeId),
             'image_link' => $mainImage,
-            'additional_image_link' => implode(',', $additional),
+            'additional_image_link' => $this->joinImageUrls($additional),
+            'sale_price_effective_date' => $this->salePriceEffectiveDate($variant),
             'item_group_id' => $hasVariations ? (string) $parent->getSku() : '',
             'google_product_category' => $this->attributeText($parent, $this->config->getGoogleCategoryAttribute($storeId)),
             'product_type' => $this->categoryPath($parent, $storeId),
@@ -144,6 +145,20 @@ class ProductMapper
             $summary = $this->reviewSummary($parent, $storeId);
             $row['review_count'] = (string) $summary['count'];
             $row['star_rating'] = $summary['rating'] !== null ? number_format($summary['rating'], 2, '.', '') : '';
+        }
+
+        $labels = $this->adsLabels(
+            $parent,
+            $storeId,
+            $price > 0 && $listPrice > $price,
+            $availability['status'],
+            (string) $row['brand']
+        );
+        foreach ($labels as $labelKey => $labelValue) {
+            $row[$labelKey] = $labelValue;
+        }
+        if ($labels !== []) {
+            $row['ads_metadata'] = json_encode($labels, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
 
         return $row;
@@ -252,9 +267,28 @@ class ProductMapper
                 }
             }
         }
-        return array_values(array_unique(array_filter(
+        $urls = array_values(array_unique(array_filter(
             array_map(fn (string $url): string => $this->rewriteMediaUrl($url, (int) $product->getStoreId()), $urls)
         )));
+
+        return array_slice($urls, 0, 11);
+    }
+
+    /**
+     * @param string[] $urls
+     */
+    private function joinImageUrls(array $urls): string
+    {
+        $encoded = [];
+        foreach ($urls as $url) {
+            $url = trim($url);
+            if ($url === '') {
+                continue;
+            }
+            $encoded[] = str_replace(',', '%2C', $url);
+        }
+
+        return implode(',', $encoded);
     }
 
     private function rewriteMediaUrl(string $url, int $storeId): string
@@ -291,13 +325,36 @@ class ProductMapper
         if (!$images) {
             return [];
         }
-        $urls = [];
+        $rows = [];
         foreach ($images as $image) {
-            $url = (string) $image->getUrl();
-            if ($url !== '') {
-                $urls[] = $url;
+            if ((int) $image->getDisabled() === 1) {
+                continue;
             }
+            $url = (string) $image->getUrl();
+            if ($url === '') {
+                continue;
+            }
+            $rows[] = [
+                'url' => $url,
+                'file' => (string) $image->getFile(),
+                'position' => (int) $image->getPosition(),
+            ];
         }
+        $base = (string) $product->getImage();
+        usort(
+            $rows,
+            static function (array $left, array $right) use ($base): int {
+                $leftBase = $base !== '' && $base !== 'no_selection' && $left['file'] === $base ? 0 : 1;
+                $rightBase = $base !== '' && $base !== 'no_selection' && $right['file'] === $base ? 0 : 1;
+
+                return $leftBase <=> $rightBase ?: $left['position'] <=> $right['position'];
+            }
+        );
+        $urls = [];
+        foreach ($rows as $row) {
+            $urls[] = $row['url'];
+        }
+
         return $urls;
     }
 
@@ -630,6 +687,64 @@ class ProductMapper
             ];
         } catch (\Throwable) {
             return ['count' => 0, 'rating' => null];
+        }
+    }
+
+    /**
+     * Filterlabels für Ads-Produktsets. Die Schlüssel custom_label_0 bis
+     * custom_label_4 sind die von OpenAI unterstützten Feed-Spalten.
+     *
+     * @return array<string, string>
+     */
+    private function adsLabels(
+        Product $parent,
+        int $storeId,
+        bool $onSale,
+        string $availability,
+        string $brand
+    ): array {
+        $parts = array_values(array_filter(array_map(
+            static fn (string $part): string => trim($part),
+            explode('>', $this->categoryPath($parent, $storeId))
+        )));
+        $root = $parts[0] ?? '';
+        $leaf = $parts === [] ? '' : (string) $parts[array_key_last($parts)];
+        if ($leaf === $root) {
+            $leaf = '';
+        }
+
+        $labels = [
+            'custom_label_0' => $this->clip($root, 100),
+            'custom_label_1' => $onSale ? 'sale' : 'regular',
+            'custom_label_2' => $this->clip($brand, 100),
+            'custom_label_3' => $availability,
+            'custom_label_4' => $this->clip($leaf, 100),
+        ];
+
+        return array_filter($labels, static fn (string $value): bool => $value !== '');
+    }
+
+    private function salePriceEffectiveDate(Product $variant): string
+    {
+        $start = $this->utcTimestamp((string) $variant->getSpecialFromDate());
+        $end = $this->utcTimestamp((string) $variant->getSpecialToDate());
+        if ($start === '' || $end === '' || $start >= $end) {
+            return '';
+        }
+
+        return $start . '/' . $end;
+    }
+
+    private function utcTimestamp(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        try {
+            return (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+        } catch (\Throwable) {
+            return '';
         }
     }
 
